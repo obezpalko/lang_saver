@@ -6,6 +6,6 @@ Save language per window
 pip install -r requirements.txt
 ./lang_saver.py &
 
-# i3-wm
+# i3-wm or sway
 echo 'exec --no-startup-id ~/bin/lang_saver.py &' >> ~/.config/i3/config
 
