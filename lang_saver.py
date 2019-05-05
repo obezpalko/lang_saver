@@ -30,7 +30,10 @@ class LangSaver():
         prew_window = 0
         prev_group = self.xkb.group_num
         while True:
-            window = self.display.get_input_focus().focus.id
+            try:
+                window = self.display.get_input_focus().focus.id
+            except AttributeError:
+                continue
             if window != prew_window:
                 #  window has been changed
                 #  need to check if current group match stored
