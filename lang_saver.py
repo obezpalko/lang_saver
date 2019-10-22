@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" save language per window
+""" save language per window in sway/i3
 """
 
 import logging
 import os
-from logging.handlers import SysLogHandler
-from time import sleep
-from xkbgroup import XKeyboard
-from Xlib.display import Display
 import setproctitle
 import sys
 import i3ipc
