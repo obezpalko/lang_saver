@@ -51,9 +51,10 @@ def main():
     def on_input(self: i3ipc.Connection, ev: i3ipc.InputEvent):
         global window_layouts
         focused_window = i3.get_tree().find_focused()
-        window_layouts[focused_window.id] = ev.input
-        log.info(
-            f'store window: {focused_window.id} {ev.change} {ev.input.xkb_active_layout_name} {ev.input.xkb_layout_names}')
+        if focused_window.id:
+            window_layouts[focused_window.id] = ev.input
+            log.info(
+                f'store window: {focused_window.id} {ev.change} {ev.input.xkb_active_layout_name} {ev.input.xkb_layout_names}')
 
     def on_focus(self: i3ipc.Connection, ev: i3ipc.WindowEvent):
         global window_layouts
