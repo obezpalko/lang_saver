@@ -8,6 +8,7 @@ import os
 import setproctitle
 import sys
 import i3ipc
+import psutil
 from systemd.journal import JournaldLogHandler
 
 encodings = ['English (US, intl., with dead keys)', 'Hebrew', 'Ukrainian']
@@ -24,7 +25,8 @@ def get_layout(encoding):
 
 
 def main():
-    setproctitle.setproctitle(os.path.basename(sys.argv[0]))
+    program_name = os.path.basename(sys.argv[0])
+    setproctitle.setproctitle(program_name)
     i3 = i3ipc.Connection()
     log = logging.getLogger(os.path.basename(sys.argv[0]))
     journald_handler = JournaldLogHandler()
@@ -35,10 +37,27 @@ def main():
     log.setLevel(logging.DEBUG)
     pid_file = f'/run/user/{os.getuid()}/{os.path.basename(sys.argv[0])}.pid'
     if os.path.exists(pid_file):
-        log.critical(f'pid file exists {pid_file}')
-        print(f'pid file exists {pid_file}')
-        sys.exit()
+        old_pid = int(open(pid_file, 'r').readline())
+        try:
+            old_process = psutil.Process(old_pid).name()
+        except psutil.NoSuchProcess as exc:
+            log.debug(f'no process with PID: {old_pid}. deleting {pid_file}')
+            # os.remove(pid_file)
+            old_process = None
+        if old_process == program_name:
+            log.debug(f'process {program_name} is running with PID: {old_pid}. exiting')
+            print(f'{program_name} is running with PID: {old_pid}')
+            sys.exit()
+        else:
+            log.debug(f'no {program_name} with PID: {old_pid}. deleting {pid_file}')
+            # os.remove(pid_file)
     f = open(pid_file, 'w')
+    for proc in psutil.process_iter():
+        if proc.name() == program_name and proc.uids().real == os.getuid():
+            log.debug(f'{program_name} is already running for user {os.getuid()} with pid {proc.pid}. update pidfile and exiting')
+            f.write(f'{proc.pid}')
+            sys.exit()
+
     f.write(f'{os.getpid()}')
     f.close()
 
