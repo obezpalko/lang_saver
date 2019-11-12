@@ -5,8 +5,8 @@
 
 import logging
 import os
-import setproctitle
 import sys
+import setproctitle
 import i3ipc
 import psutil
 from systemd.journal import JournaldLogHandler
@@ -20,8 +20,7 @@ def get_layout(encoding):
     global encodings, xkb_layouts
     if encoding in encodings:
         return xkb_layouts[encodings.index(encoding)]
-    else:
-        return 'us(intl)'
+    return 'us(intl)'
 
 
 def main():
@@ -41,7 +40,7 @@ def main():
         try:
             old_process = psutil.Process(old_pid).name()
         except psutil.NoSuchProcess as exc:
-            log.debug(f'no process with PID: {old_pid}. deleting {pid_file}')
+            log.debug("%s. deleting %s", exc, pid_file)
             # os.remove(pid_file)
             old_process = None
         if old_process == program_name:
@@ -52,13 +51,14 @@ def main():
             log.debug(f'no {program_name} with PID: {old_pid}. deleting {pid_file}')
             # os.remove(pid_file)
     f = open(pid_file, 'w')
+    current_pid = os.getpid()
     for proc in psutil.process_iter():
-        if proc.name() == program_name and proc.uids().real == os.getuid():
+        if proc.name() == program_name and proc.uids().real == os.getuid() and current_pid != proc.pid:
             log.debug(f'{program_name} is already running for user {os.getuid()} with pid {proc.pid}. update pidfile and exiting')
             f.write(f'{proc.pid}')
             sys.exit()
 
-    f.write(f'{os.getpid()}')
+    f.write(f'{current_pid}')
     f.close()
 
     def get_input() -> i3ipc.InputReply:
